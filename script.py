@@ -1,9 +1,15 @@
+
+if __name__ == "__main__":
+	import os
+	os.system("pip install -r requirements.txt")
+	os.system("python -m uvicorn script:app")
+
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.responses import RedirectResponse
 import requests
 import sqlite3
-import os
 import datetime
 import asyncio
 from typing import Iterable
@@ -19,7 +25,7 @@ DEFAULT_PARAMS = {
 UPDATE_INTERVAL = 60*15  # 15 minutes
 
 # Connecting to the SQLite database
-connection = sqlite3.connect("cities_weather.db")
+connection = sqlite3.connect("cities_weather.db", check_same_thread=False)
 cursor = connection.cursor()
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS Cities(
@@ -38,6 +44,14 @@ connection.commit()
 async def get_weather(latitude: float, longitude: float,
 					  start_time: str = str(datetime.datetime.now().replace(microsecond=0).isoformat()),
 					  end_time: str = str(datetime.datetime.now().replace(microsecond=0).isoformat())):
+	'''
+	Gets weather data for a given location and time period.
+	:param latitude: latitude of the place to get weather data for
+	:param longitude: longitude of the place to get weather data for
+	:param start_time: start of the given time period in ISO 8601 format
+	:param end_time: end of the given time period in ISO 8601 format
+	:return: dictionary with weather data.
+	'''
 	params = DEFAULT_PARAMS.copy()
 	params["latitude"] = latitude
 	params["longitude"] = longitude
@@ -57,7 +71,7 @@ async def get_weather(latitude: float, longitude: float,
 		"temperature": temp,
 		"pressure": pressure,
 		"wind_speed": wind_speed,
-		"time": current_time,
+		"last_update_time": current_time,
 	}
 	return result
 
@@ -98,7 +112,7 @@ async def setup():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 	'''
-	Starts functions that msut run on setup.
+	Starts functions that must run on setup.
 	:param app: FastAPI instance.
 	:return:
 	'''
@@ -130,7 +144,7 @@ async def get_current_weather(latitude: float = Path(ge=-90, le=90, examples=[57
 @app.get("/{city_name}/{latitude}&{longitude}")
 async def add_city(city_name: str = Path(min_length=1, max_length=30, examples=["Saint-Petersburg"]),
 				   latitude: float = Path(ge=-90, le=90, examples=[57.3842]),
-				   longitude: float= Path(ge=-180, le=180, examples=[12.004])) -> dict:
+				   longitude: float = Path(ge=-180, le=180, examples=[12.004])) -> dict:
 	'''
     Adds city to the database and returns its current weather.
     :param city_name: name of the city to add
@@ -148,7 +162,7 @@ async def add_city(city_name: str = Path(min_length=1, max_length=30, examples=[
 	result["city_name"] = city_name
 	return result
 
-@app.get("/{city_name}")
+@app.get("/cities")
 async def get_cities() -> list:
 	'''
     Returns list of all cities in the database.
@@ -175,17 +189,17 @@ async def get_city_weather(city_name: str = Path(min_length=1, max_length=30, ex
 	try:
 		latitude, longitude = cursor.execute("SELECT latitude, longitude FROM Cities WHERE name = ?",
 									 (city_name,)).fetchone()
-	except sqlite3.Error as e:
+	except TypeError as e:
 		raise HTTPException(status_code=404, detail=f"City {city_name} not found.")
 	scan_time = str(datetime.datetime.now().replace(microsecond=0).isoformat())[:11] + scan_time
 	result = await get_weather(latitude, longitude, scan_time, scan_time)
 	result["city_name"] = city_name
+	result["last_update_time"] = scan_time
 	return result
 
 
 # Program setup
-if __name__ == "__main__":
-	os.system("python -m uvicorn script:app")
+
 
 
 
