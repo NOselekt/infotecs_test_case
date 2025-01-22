@@ -1,7 +1,9 @@
+https://github.com/NOselekt/infotecs_test_cases
 # Русский
 Для старта сервера просто запустите файл script.py. Он автоматически установит необходимые библиотеки и модули и запустит приложение. 
 Так как в ТЗ было указано, что решение должно содержать только файл script.py, в проекте отсутствуют HTML-шаблоны и стили. По этой причине при открытии главной страницы 
 (http://127.0.0.1:8000/ в случае локального запуска) вас перенаправит на страницу встроенной документации FastAPI для полноценного пользования методами.
+Для запуска тестов запустите команду "pytest tests.py" в терминале или просто запустите файл tests.py.
 ## Методы
 #### get_weather()
 	:param latitude: широта места для получения данных о погоде
@@ -48,7 +50,8 @@ Redirects user from home page to the documentation page for better experience.
 Возвращает словарь с данными о погоде в заданном городе на указанное время, если этот город есть в базе данных.
 
 # English
-Server may be set up with just launching "script.py". It will automatically install all required frameworks and modules and set up the server.
+Server may be set up with just running "script.py". It will automatically install all required frameworks and modules and set up the server.
+To launch tests just write "pytest tests.py" in the terminal or run tests.py.
 ## Methods
 #### get_weather()
 	:param latitude: latitude of the place to get weather data for
