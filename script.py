@@ -150,7 +150,7 @@ async def add_city(city_name: str = Path(min_length=1, max_length=30, examples=[
     :param city_name: name of the city to add
     :param latitude: latitude of the city
     :param longitude: longitude of the city
-    :return: dictionary of current weather data in the added city with city name and current now
+    :return: dictionary of current weather data in the added city with city name and current time
     '''
 	result = await get_weather(latitude, longitude)
 	try:
